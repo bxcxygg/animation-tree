@@ -1,13 +1,15 @@
 mod implemented;
 mod lerp;
 
+pub mod prelude {
+    pub use crate::{lerp::Lerp, *};
+}
+
 use std::ops::Deref;
 
 use bevy::{hierarchy::HierarchySystem, prelude::*, transform::TransformSystem, utils::HashMap};
 
 use crate::lerp::Lerp;
-
-pub trait KeyframeComponent {}
 
 /// Wrapper around a type that can be eased.
 pub struct Keyframe<T>(pub T);
@@ -15,7 +17,7 @@ pub struct Keyframe<T>(pub T);
 /// Describes how an attribute of a [`Entity`] should be animated.
 ///
 /// `keyframe_timestamps` and `keyframes` should have the same length.
-pub struct VariableCurve<T> {
+pub struct KeyframeVariableCurve<T> {
     /// Timestamp for each of the keyframes.
     pub keyframe_timestamps: Vec<f32>,
     /// List of the keyframes.
@@ -26,21 +28,21 @@ pub struct VariableCurve<T> {
 
 /// Path to an entity, with [`Name`]s. Each entity in a path must have a name.
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Default)]
-pub struct EntityPath {
+pub struct KeyframeEntityPath {
     /// Parts of the path
     pub parts: Vec<Name>,
 }
 
 #[derive(Default, Component)]
-pub struct AnimationClip<T> {
-    curves: HashMap<EntityPath, Vec<VariableCurve<T>>>,
+pub struct KeyframeAnimationClip<T> {
+    curves: HashMap<KeyframeEntityPath, Vec<KeyframeVariableCurve<T>>>,
     duration: f32,
 }
 
-impl<T> AnimationClip<T> {
+impl<T> KeyframeAnimationClip<T> {
     #[inline]
     /// Hashmap of the [`VariableCurve`]s per [`EntityPath`].
-    pub fn curves(&self) -> &HashMap<EntityPath, Vec<VariableCurve<T>>> {
+    pub fn curves(&self) -> &HashMap<KeyframeEntityPath, Vec<KeyframeVariableCurve<T>>> {
         &self.curves
     }
 
@@ -51,7 +53,7 @@ impl<T> AnimationClip<T> {
     }
 
     /// Add a [`VariableCurve`] to an [`EntityPath`].
-    pub fn add_curve_to_path(&mut self, path: EntityPath, curve: VariableCurve<T>) {
+    pub fn add_curve_to_path(&mut self, path: KeyframeEntityPath, curve: KeyframeVariableCurve<T>) {
         // Update the duration of the animation by this curve duration if it's longer
         self.duration = self
             .duration
@@ -61,16 +63,16 @@ impl<T> AnimationClip<T> {
 }
 
 #[derive(Component)]
-pub struct AnimationPlayer<T> {
+pub struct KeyframeAnimationPlayer<T> {
     paused: bool,
     repeat: bool,
     speed: f32,
     elapsed: f32,
-    animation_clip: AnimationClip<T>,
+    animation_clip: KeyframeAnimationClip<T>,
 }
 
-impl<T> AnimationPlayer<T> {
-    pub fn new(animation_clip: AnimationClip<T>) -> Self {
+impl<T> KeyframeAnimationPlayer<T> {
+    pub fn new(animation_clip: KeyframeAnimationClip<T>) -> Self {
         Self {
             paused: false,
             repeat: false,
@@ -81,9 +83,9 @@ impl<T> AnimationPlayer<T> {
     }
 }
 
-impl<T> AnimationPlayer<T> {
+impl<T> KeyframeAnimationPlayer<T> {
     /// Start playing an animation, resetting state of the player
-    pub fn play(&mut self, handle: AnimationClip<T>) -> &mut Self {
+    pub fn play(&mut self, handle: KeyframeAnimationClip<T>) -> &mut Self {
         *self = Self {
             animation_clip: handle,
             paused: false,
@@ -146,14 +148,14 @@ impl<T> AnimationPlayer<T> {
 
 /// System that will play all animations, using any entity with a
 /// [`AnimationPlayer`] and a [`AnimationClip`] as an animation root
-fn animation_player<T: Component>(
+pub fn keyframe_animation_player<T: Component>(
     time: Res<Time>,
     mut query: Query<(Entity, &mut T)>,
-    mut animation_players: Query<&mut AnimationPlayer<T>>,
+    mut animation_players: Query<&mut KeyframeAnimationPlayer<T>>,
     names: Query<&Name>,
     children: Query<&Children>,
 ) where
-    Keyframe<T>: Lerp<Scalar = f32, Target = T>,
+    Keyframe<T>: Lerp<T, Scalar = f32>,
     T: Default,
 {
     for (entity, mut object) in query.iter_mut() {
@@ -239,15 +241,17 @@ fn animation_player<T: Component>(
 
 /// Adds animation support to an app
 #[derive(Default)]
-pub struct AnimationPlugin;
+pub struct KeyframeAnimationPlugin;
 
-impl Plugin for AnimationPlugin {
+impl Plugin for KeyframeAnimationPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(
             CoreStage::PostUpdate,
-            animation_player::<Transform>
+            keyframe_animation_player::<Transform>
                 .before(TransformSystem::TransformPropagate)
                 .after(HierarchySystem::ParentUpdate),
-        );
+        )
+        .add_system(keyframe_animation_player::<Sprite>)
+        .add_system(keyframe_animation_player::<TextureAtlasSprite>);
     }
 }

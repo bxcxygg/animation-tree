@@ -3,15 +3,13 @@
 
 use std::f32::consts::{FRAC_PI_2, PI};
 
-use animation_tree::{
-    AnimationClip, AnimationPlayer, AnimationPlugin, EntityPath, Keyframe, VariableCurve,
-};
 use bevy::prelude::*;
+use keyframe_animate::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(AnimationPlugin)
+        .add_plugin(KeyframeAnimationPlugin)
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0,
@@ -37,13 +35,13 @@ fn setup(
     let satellite = Name::new("satellite");
 
     // Creating the animation
-    let mut animation = AnimationClip::default();
+    let mut animation = KeyframeAnimationClip::default();
     // A curve can modify a single part of a transform, here the translation
     animation.add_curve_to_path(
-        EntityPath {
+        KeyframeEntityPath {
             parts: vec![planet.clone()],
         },
-        VariableCurve {
+        KeyframeVariableCurve {
             options: Some(vec!["translation".to_string()]),
             keyframe_timestamps: vec![0.0, 1.0, 2.0, 3.0, 4.0],
             keyframes: Keyframe::translation(vec![
@@ -61,10 +59,10 @@ fn setup(
     // To find the entity to modify, the hierarchy  will be traversed looking for
     // an entity with the right name at each level
     animation.add_curve_to_path(
-        EntityPath {
+        KeyframeEntityPath {
             parts: vec![planet.clone(), orbit_controller.clone()],
         },
-        VariableCurve {
+        KeyframeVariableCurve {
             options: Some(vec!["rotation".to_string()]),
             keyframe_timestamps: vec![0.0, 1.0, 2.0, 3.0, 4.0],
             keyframes: Keyframe::rotation(vec![
@@ -80,10 +78,10 @@ fn setup(
     // until all other curves are finished. In that case, another animation should
     // be created for each part that would have a different duration / period
     animation.add_curve_to_path(
-        EntityPath {
+        KeyframeEntityPath {
             parts: vec![planet.clone(), orbit_controller.clone(), satellite.clone()],
         },
-        VariableCurve {
+        KeyframeVariableCurve {
             options: Some(vec!["scale".to_string()]),
             keyframe_timestamps: vec![0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
             keyframes: Keyframe::scale(vec![
@@ -101,10 +99,10 @@ fn setup(
     );
     // There can be more than one curve targeting the same entity path
     animation.add_curve_to_path(
-        EntityPath {
+        KeyframeEntityPath {
             parts: vec![planet.clone(), orbit_controller.clone(), satellite.clone()],
         },
-        VariableCurve {
+        KeyframeVariableCurve {
             options: Some(vec!["rotation".to_string()]),
             keyframe_timestamps: vec![0.0, 1.0, 2.0, 3.0, 4.0],
             keyframes: Keyframe::rotation(vec![
@@ -118,7 +116,7 @@ fn setup(
     );
 
     // Create the animation player, and set it to repeat
-    let mut player = AnimationPlayer::new(animation);
+    let mut player = KeyframeAnimationPlayer::new(animation);
     player.repeat();
 
     // Create the scene that will be animated

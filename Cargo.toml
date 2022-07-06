@@ -1,16 +1,25 @@
 [package]
-name = "animation-tree"
+name = "keyframe-animate"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["render", "sprite", "ui"]
+render = ["bevy/bevy_render"]
+sprite = ["bevy/bevy_sprite"]
+ui = ["bevy/bevy_ui"]
+examples = ["ui", "sprite", "render", "bevy/render", "bevy/bevy_winit", "bevy/x11"]
+
 [[example]]
 name = "animated_transform"
 path = "examples/animated_transform.rs"
+required-features = [ "examples" ]
 
 [dependencies]
 bevy = { version = "0.7", default-features = false }
 
 [dev-dependencies]
-bevy = { version = "0.7", features = [] }
+bevy = "0.7"
+bevy_editor_pls = { git = "https://github.com/jakobhellermann/bevy_editor_pls" }
