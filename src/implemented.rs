@@ -3,12 +3,10 @@ use bevy::prelude::*;
 use crate::{lerp::Lerp, Keyframe};
 
 impl Lerp<Transform> for Keyframe<Transform> {
-    type Scalar = f32;
-
     fn lerp(
         &self,
         other: &Self,
-        scalar: &Self::Scalar,
+        scalar: f32,
         target: &Transform,
         options: &Option<Vec<String>>,
     ) -> Self {
@@ -19,14 +17,14 @@ impl Lerp<Transform> for Keyframe<Transform> {
                     match op.as_str() {
                         "translation" => {
                             transform.translation =
-                                self.0.translation.lerp(other.0.translation, *scalar);
+                                self.0.translation.lerp(other.0.translation, scalar);
                         }
                         "scale" => {
-                            transform.scale = self.0.scale.lerp(other.0.scale, *scalar);
+                            transform.scale = self.0.scale.lerp(other.0.scale, scalar);
                         }
                         "rotation" => {
                             transform.rotation =
-                                self.0.rotation.normalize().lerp(other.0.rotation, *scalar);
+                                self.0.rotation.normalize().lerp(other.0.rotation, scalar);
                         }
                         _ => {}
                     }
@@ -34,9 +32,9 @@ impl Lerp<Transform> for Keyframe<Transform> {
                 Keyframe(transform)
             }
             None => Keyframe(Transform {
-                translation: self.0.translation.lerp(other.0.translation, *scalar),
-                scale: self.0.scale.lerp(other.0.scale, *scalar),
-                rotation: self.0.rotation.normalize().lerp(other.0.rotation, *scalar),
+                translation: self.0.translation.lerp(other.0.translation, scalar),
+                scale: self.0.scale.lerp(other.0.scale, scalar),
+                rotation: self.0.rotation.normalize().lerp(other.0.rotation, scalar),
             }),
         }
     }
@@ -81,21 +79,13 @@ impl Keyframe<Transform> {
 }
 
 impl Lerp<Sprite> for Keyframe<Sprite> {
-    type Scalar = f32;
-
-    fn lerp(
-        &self,
-        other: &Self,
-        scalar: &Self::Scalar,
-        _: &Sprite,
-        _: &Option<Vec<String>>,
-    ) -> Self {
+    fn lerp(&self, other: &Self, scalar: f32, _: &Sprite, _: &Option<Vec<String>>) -> Self {
         Keyframe(Sprite {
             custom_size: match (self.0.custom_size, other.0.custom_size) {
                 (None, None) => None,
                 (None, Some(b)) => Some(b),
                 (Some(a), None) => Some(a),
-                (Some(a), Some(b)) => Some(a.lerp(b, *scalar)),
+                (Some(a), Some(b)) => Some(a.lerp(b, scalar)),
             },
             #[cfg(feature = "render")]
             color: Keyframe(self.0.color)
@@ -107,15 +97,7 @@ impl Lerp<Sprite> for Keyframe<Sprite> {
 }
 
 impl Lerp<Color> for Keyframe<Color> {
-    type Scalar = f32;
-
-    fn lerp(
-        &self,
-        other: &Self,
-        scalar: &Self::Scalar,
-        _: &Color,
-        _: &Option<Vec<String>>,
-    ) -> Self {
+    fn lerp(&self, other: &Self, scalar: f32, _: &Color, _: &Option<Vec<String>>) -> Self {
         let color = match (self.0, other.0) {
             (
                 Color::Rgba {
@@ -131,10 +113,10 @@ impl Lerp<Color> for Keyframe<Color> {
                     alpha: alphao,
                 },
             ) => Color::Rgba {
-                red: red + (redo + (red * -1.0)) * *scalar,
-                green: green + (greeno + (green * -1.0)) * *scalar,
-                blue: blue + (blueo + (blue * -1.0)) * *scalar,
-                alpha: alpha + (alphao + (alpha * -1.0)) * *scalar,
+                red: red + (redo + (red * -1.0)) * scalar,
+                green: green + (greeno + (green * -1.0)) * scalar,
+                blue: blue + (blueo + (blue * -1.0)) * scalar,
+                alpha: alpha + (alphao + (alpha * -1.0)) * scalar,
             },
             (
                 Color::RgbaLinear {
@@ -150,10 +132,10 @@ impl Lerp<Color> for Keyframe<Color> {
                     alpha: alphao,
                 },
             ) => Color::RgbaLinear {
-                red: red + (redo + (red * -1.0)) * *scalar,
-                green: green + (greeno + (green * -1.0)) * *scalar,
-                blue: blue + (blueo + (blue * -1.0)) * *scalar,
-                alpha: alpha + (alphao + (alpha * -1.0)) * *scalar,
+                red: red + (redo + (red * -1.0)) * scalar,
+                green: green + (greeno + (green * -1.0)) * scalar,
+                blue: blue + (blueo + (blue * -1.0)) * scalar,
+                alpha: alpha + (alphao + (alpha * -1.0)) * scalar,
             },
             (
                 Color::Hsla {
@@ -169,24 +151,22 @@ impl Lerp<Color> for Keyframe<Color> {
                     alpha: alphao,
                 },
             ) => Color::Hsla {
-                hue: hue + (hueo + (hue * -1.0)) * *scalar,
-                saturation: saturation + (saturationo + (saturation * -1.0)) * *scalar,
-                lightness: lightness + (lightnesso + (lightness * -1.0)) * *scalar,
-                alpha: alpha + (alphao + (alpha * -1.0)) * *scalar,
+                hue: hue + (hueo + (hue * -1.0)) * scalar,
+                saturation: saturation + (saturationo + (saturation * -1.0)) * scalar,
+                lightness: lightness + (lightnesso + (lightness * -1.0)) * scalar,
+                alpha: alpha + (alphao + (alpha * -1.0)) * scalar,
             },
-            _ => self.0 + (other.0 + (self.0 * -1.)) * *scalar,
+            _ => self.0 + (other.0 + (self.0 * -1.)) * scalar,
         };
         Keyframe(color)
     }
 }
 
 impl Lerp<TextureAtlasSprite> for Keyframe<TextureAtlasSprite> {
-    type Scalar = f32;
-
     fn lerp(
         &self,
         other: &Self,
-        scalar: &Self::Scalar,
+        scalar: f32,
         target: &TextureAtlasSprite,
         options: &Option<Vec<String>>,
     ) -> Self {
@@ -211,7 +191,7 @@ impl Lerp<TextureAtlasSprite> for Keyframe<TextureAtlasSprite> {
                     (None, None) => None,
                     (None, Some(b)) => Some(b),
                     (Some(a), None) => Some(a),
-                    (Some(a), Some(b)) => Some(a.lerp(b, *scalar)),
+                    (Some(a), Some(b)) => Some(a.lerp(b, scalar)),
                 },
                 #[cfg(feature = "render")]
                 color: Keyframe(self.0.color)
@@ -234,5 +214,21 @@ impl Keyframe<TextureAtlasSprite> {
                 })
             })
             .collect()
+    }
+}
+
+impl Lerp<Handle<Image>> for Keyframe<Handle<Image>> {
+    fn lerp(&self, other: &Self, _: f32, _: &Handle<Image>, _: &Option<Vec<String>>) -> Self {
+        Keyframe(other.0.clone())
+    }
+}
+
+impl Keyframe<Handle<Image>> {
+    pub fn images(values: Vec<Handle<Image>>) -> Vec<Keyframe<Handle<Image>>> {
+        let mut images = Vec::new();
+        for image in values {
+            images.push(Keyframe(image));
+        }
+        images
     }
 }

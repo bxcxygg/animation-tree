@@ -14,6 +14,15 @@ use crate::lerp::Lerp;
 /// Wrapper around a type that can be eased.
 pub struct Keyframe<T>(pub T);
 
+impl<T> Lerp<T> for Keyframe<T>
+where
+    T: Lerp<T>,
+{
+    fn lerp(&self, other: &Self, scalar: f32, target: &T, options: &Option<Vec<String>>) -> Self {
+        Keyframe(self.0.lerp(&other.0, scalar, target, options))
+    }
+}
+
 /// Describes how an attribute of a [`Entity`] should be animated.
 ///
 /// `keyframe_timestamps` and `keyframes` should have the same length.
@@ -155,7 +164,7 @@ pub fn keyframe_animation_player<T: Component>(
     names: Query<&Name>,
     children: Query<&Children>,
 ) where
-    Keyframe<T>: Lerp<T, Scalar = f32>,
+    Keyframe<T>: Lerp<T>,
     T: Default,
 {
     for (entity, mut object) in query.iter_mut() {
@@ -204,7 +213,7 @@ pub fn keyframe_animation_player<T: Component>(
                     // Some curves have only one keyframe used to set a keyframe
                     if curve.keyframe_timestamps.len() == 1 {
                         *object = Keyframe(T::default())
-                            .lerp(&curve.keyframes[0], &0., &*object, &curve.options)
+                            .lerp(&curve.keyframes[0], 0., &*object, &curve.options)
                             .0;
                         continue;
                     }
@@ -228,7 +237,7 @@ pub fn keyframe_animation_player<T: Component>(
                     *object = curve.keyframes[step_start]
                         .lerp(
                             &curve.keyframes[step_start + 1],
-                            &lerp,
+                            lerp,
                             &*object,
                             &curve.options,
                         )
@@ -252,6 +261,7 @@ impl Plugin for KeyframeAnimationPlugin {
                 .after(HierarchySystem::ParentUpdate),
         )
         .add_system(keyframe_animation_player::<Sprite>)
+        .add_system(keyframe_animation_player::<Handle<Image>>)
         .add_system(keyframe_animation_player::<TextureAtlasSprite>);
     }
 }
