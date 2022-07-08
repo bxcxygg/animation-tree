@@ -1,13 +1,11 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_editor_pls::EditorPlugin;
 use keyframe_animate::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(EditorPlugin)
         .add_plugin(KeyframeAnimationPlugin)
         .add_startup_system(spawn)
         .run();
@@ -22,7 +20,7 @@ fn spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // Create an animation
     let mut animation = KeyframeAnimationClip::default();
-    // Here we use an index-range (from 0 to 4) where each frame has the same
+    // Here we use an index-range (from 0 to 5) where each frame has the same
     // duration
     let duration = Duration::from_millis(100).as_secs_f32();
     animation.add_curve_to_path(

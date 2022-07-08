@@ -20,9 +20,25 @@ name = "animated_transform"
 path = "examples/animated_transform.rs"
 required-features = [ "examples" ]
 
+[[example]]
+name = "animated_sprite"
+path = "examples/animated_sprite.rs"
+required-features = [ "examples" ]
+
+[[example]]
+name = "animated_spritesheet"
+path = "examples/animated_spritesheet.rs"
+required-features = [ "examples" ]
+
+[[example]]
+name = "animated_custom"
+path = "examples/animated_custom.rs"
+required-features = [ "examples" ]
+
 [dependencies]
 bevy = { version = "0.7", default-features = false }
 
 [dev-dependencies]
 bevy = "0.7"
 bevy_editor_pls = { git = "https://github.com/jakobhellermann/bevy_editor_pls" }
+interpolation = "0.2"
